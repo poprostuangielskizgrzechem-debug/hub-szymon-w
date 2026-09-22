@@ -5219,7 +5219,7 @@ video {
                 var head = '<p class="hub-section-title' + (gi === 0 ? ' is-first' : '') + '">' +
                     escapeHtml(grp.label) + (grp.dateLabel ? ' &middot; ' + escapeHtml(grp.dateLabel) : '') + '</p>';
                 return head + renderLinks(grp.items.map(function (m) {
-                    return { label: m.label, url: m.url, type: m.type };
+                    return { label: m.label, url: m.url, type: m.type, questions: m.questions };
                 }));
             }).join('');
         }
