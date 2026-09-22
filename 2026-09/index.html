@@ -2016,7 +2016,7 @@ video {
       .hub-link-questions { background:var(--hub-paper); border:1px solid var(--hub-line); border-top:none;
                              border-radius:0 0 12px 12px; padding:10px 14px 12px; }
       .hub-link-questions summary { cursor:pointer; font-size:13px; font-weight:700; color:var(--hub-blue); }
-      .hub-link-questions ul { margin:8px 0 0; padding-left:18px; }
+      .hub-link-questions ol { margin:8px 0 0; padding-left:18px; }
       .hub-link-questions li { font-size:13.5px; line-height:1.5; color:var(--hub-ink); margin-bottom:5px; }
 
       /* --- wymowa --- */
@@ -5120,7 +5120,7 @@ video {
                     '</span></a>';
                 if (lk.questions && lk.questions.length) {
                     var questions = '<details class="hub-link-questions"><summary>Pytania do rozmowy (' + lk.questions.length + ')</summary>' +
-                        '<ul>' + lk.questions.map(function (q) { return '<li>' + escapeHtml(q) + '</li>'; }).join('') + '</ul>' +
+                        '<ol>' + lk.questions.map(function (q) { return '<li>' + escapeHtml(q) + '</li>'; }).join('') + '</ol>' +
                         '</details>';
                     return '<div class="hub-link-group">' + tile + questions + '</div>';
                 }
