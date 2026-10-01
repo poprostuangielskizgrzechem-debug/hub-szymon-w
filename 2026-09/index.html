@@ -2626,8 +2626,9 @@ video {
                     <div class="hub-share hidden" id="hub-ex-share-panel">
                         <div class="hub-share-actions">
                             <button type="button" class="hub-cta hub-cta-alt hidden" id="hub-ex-share-native">&#128228; Udost&#281;pnij</button>
-                            <a class="hub-cta hub-cta-wa" id="hub-ex-share-wa" href="#" target="_blank" rel="noopener">&#128172; Wy&#347;lij wyniki na WhatsApp</a>
-                            <button type="button" class="hub-cta hub-cta-alt" id="hub-ex-share-copy">&#128203; Kopiuj wyniki</button>
+                            <a class="hub-cta hub-cta-wa" id="hub-ex-share-wa" href="#" target="_blank" rel="noopener">&#128172; Wy&#347;lij na WhatsApp</a>
+                            <button type="button" class="hub-cta hub-cta-alt" id="hub-ex-share-copy">&#128203; Kopiuj tekst</button>
+                            <a class="hub-cta hub-cta-alt" id="hub-ex-share-mail" href="#">&#9993;&#65039; Wy&#347;lij mailem</a>
                         </div>
                         <p class="hub-share-status" id="hub-ex-share-status"></p>
                         <textarea class="hub-share-fallback hidden" id="hub-ex-share-fallback" readonly></textarea>
@@ -5754,6 +5755,7 @@ video {
             var k = String(exIdx);
             if (!exState[k] || typeof exState[k] !== 'object') exState[k] = { v: {}, checked: false, peeked: false };
             if (!exState[k].v) exState[k].v = {};
+            if (!exState[k].attempts) exState[k].attempts = 1;
             return exState[k];
         }
         function exSave() { safeSet(EX_KEY, JSON.stringify(exState)); }
@@ -5886,11 +5888,15 @@ video {
                     (isSelf ? '' :
                     '<div class="hub-ex-actions">' +
                     '<button type="button" class="hub-ex-btn hub-ex-btn-main" data-ex-check="' + exIdx + '">Sprawd&#378;</button>' +
-                    '<button type="button" class="hub-ex-btn" data-ex-show="' + exIdx + '">Poka&#380; odpowiedzi</button>' +
-                    '<button type="button" class="hub-ex-btn" data-ex-reset="' + exIdx + '">Wyczy&#347;&#263;</button>' +
+                    '<button type="button" class="hub-ex-btn" data-ex-reset="' + exIdx + '">&#8635; Resetuj</button>' +
                     '</div>') + '</details>';
             }).join('');
 
+            // Zasada blokady (2026-10-01, ta sama co w pytaniach pod tekstem):
+            // luka do klikniecia blokuje sie po pierwszym kliknieciu, luka do wpisania
+            // po "Sprawdz". Zablokowana luka pokazuje poprawna odpowiedz. "Resetuj"
+            // czysci cwiczenie i otwiera kolejna probe (st.attempts), ktora trafia
+            // do wiadomosci z wynikami. Caly widok odtwarza sie ze stanu (applyEx).
             function gapsOf(exIdx) {
                 return Array.prototype.slice.call(box.querySelectorAll('[data-ex="' + exIdx + '"]'));
             }
@@ -5898,14 +5904,14 @@ video {
             function answerOf(g) {
                 return EXERCISES[+g.getAttribute('data-ex')].items[+g.getAttribute('data-it')].answers[+g.getAttribute('data-gap')];
             }
-            function valueOf(g) {
-                if (g.tagName === 'INPUT') return g.value;
-                var p = g.querySelector('.hub-ex-opt.is-picked');
-                return p ? p.getAttribute('data-opt') : '';
+            function okValue(g, v) {
+                return !!String(v || '').trim() && exAccepted(answerOf(g)).some(function (x) { return exNorm(x) === exNorm(v); });
             }
-            function isOk(g) {
-                var v = valueOf(g);
-                return !!String(v).trim() && exAccepted(answerOf(g)).some(function (x) { return exNorm(x) === exNorm(v); });
+            function isLocked(g, st) {
+                if (st.checked) return true;
+                if (g.tagName === 'INPUT') return false;
+                var v = st.v[keyOf(g)];
+                return v !== undefined && v !== '';
             }
             function clearMarks(g) {
                 if (g.tagName === 'INPUT') {
@@ -5914,113 +5920,97 @@ video {
                     if (k && k.className === 'hub-ex-key') k.parentNode.removeChild(k);
                 } else {
                     Array.prototype.forEach.call(g.querySelectorAll('.hub-ex-opt'), function (b) {
-                        b.classList.remove('is-ok', 'is-bad', 'is-key');
+                        b.classList.remove('is-ok', 'is-bad', 'is-key', 'is-picked');
                     });
                 }
             }
-            function markCheck(exIdx) {
-                var gs = gapsOf(exIdx), ok = 0;
+            function applyEx(exIdx) {
+                var st = exSt(exIdx), gs = gapsOf(exIdx), ok = 0, locked = 0;
                 gs.forEach(function (g) {
                     clearMarks(g);
-                    var good = isOk(g);
-                    if (good) ok++;
+                    var v = st.v[keyOf(g)] || '';
+                    var lock = isLocked(g, st);
+                    if (lock) { locked++; if (okValue(g, v)) ok++; }
                     if (g.tagName === 'INPUT') {
-                        g.classList.toggle('is-ok', good);
-                        g.classList.toggle('is-bad', !good);
+                        g.value = v;
+                        g.readOnly = lock;
+                        if (!lock) return;
+                        var good = okValue(g, v);
+                        g.classList.add(good ? 'is-ok' : 'is-bad');
+                        if (!good) {
+                            var k = document.createElement('span');
+                            k.className = 'hub-ex-key';
+                            k.textContent = '(' + exAccepted(answerOf(g))[0] + ')';
+                            g.parentNode.insertBefore(k, g.nextSibling);
+                        }
                     } else {
-                        var p = g.querySelector('.hub-ex-opt.is-picked');
-                        if (p) p.classList.add(good ? 'is-ok' : 'is-bad');
+                        Array.prototype.forEach.call(g.querySelectorAll('.hub-ex-opt'), function (b) {
+                            var opt = b.getAttribute('data-opt');
+                            b.disabled = lock;
+                            b.style.cursor = lock ? 'default' : '';
+                            if (!lock) return;
+                            if (okValue(g, opt)) b.classList.add('is-ok');
+                            else if (opt === v) b.classList.add('is-bad');
+                        });
                     }
                 });
-                box.querySelector('[data-ex-score="' + exIdx + '"]').textContent = ok + ' / ' + gs.length;
+                var s = box.querySelector('[data-ex-score="' + exIdx + '"]');
+                if (s) s.textContent = (locked ? ok : '–') + ' / ' + s.getAttribute('data-ex-total') +
+                    (st.attempts > 1 ? ' · próba ' + st.attempts : '');
+                var chk = box.querySelector('[data-ex-check="' + exIdx + '"]');
+                if (chk) { chk.disabled = !!st.checked; chk.style.opacity = st.checked ? '.5' : ''; }
             }
-            function setScoreEmpty(exIdx) { var s = box.querySelector('[data-ex-score="' + exIdx + '"]'); s.textContent = '– / ' + s.getAttribute('data-ex-total'); }
 
-            // Przywrocenie zapisanych odpowiedzi.
-            EXERCISES.forEach(function (ex, exIdx) {
-                var st = exSt(exIdx);
-                gapsOf(exIdx).forEach(function (g) {
-                    var v = st.v[keyOf(g)];
-                    if (v === undefined || v === '') return;
-                    if (g.tagName === 'INPUT') g.value = v;
-                    else Array.prototype.forEach.call(g.querySelectorAll('.hub-ex-opt'), function (b) {
-                        b.classList.toggle('is-picked', b.getAttribute('data-opt') === v);
-                    });
-                });
-                if (st.checked) markCheck(exIdx);
-            });
+            EXERCISES.forEach(function (ex, exIdx) { if (ex.layout !== 'selfcheck') applyEx(exIdx); });
             Array.prototype.forEach.call(box.querySelectorAll('.hub-ex-selfinput'), function (inp) {
                 var v = exSt(+inp.getAttribute('data-self-ex')).v['s' + inp.getAttribute('data-it')];
                 if (v) inp.value = v;
             });
 
-            function touched(g) {
-                var exIdx = +g.getAttribute('data-ex');
-                var st = exSt(exIdx);
-                st.v[keyOf(g)] = valueOf(g);
-                if (st.checked) { st.checked = false; setScoreEmpty(exIdx); }
-                clearMarks(g);
-                exSave();
-                refreshExShare();
-            }
             box.addEventListener('input', function (e) {
                 if (e.target && e.target.classList && e.target.classList.contains('hub-ex-selfinput')) {
                     exSt(+e.target.getAttribute('data-self-ex')).v['s' + e.target.getAttribute('data-it')] = e.target.value;
                     exSave();
                     return;
                 }
-                if (e.target && e.target.classList && e.target.classList.contains('hub-ex-input')) touched(e.target);
+                if (e.target && e.target.classList && e.target.classList.contains('hub-ex-input')) {
+                    var g = e.target, st = exSt(+g.getAttribute('data-ex'));
+                    if (st.checked) return;
+                    st.v[keyOf(g)] = g.value;
+                    exSave();
+                    refreshExShare();
+                }
             });
             box.addEventListener('click', function (e) {
                 var opt = e.target.closest ? e.target.closest('.hub-ex-opt') : null;
                 if (opt) {
                     var grp = opt.parentNode;
-                    Array.prototype.forEach.call(grp.querySelectorAll('.hub-ex-opt'), function (b) { b.classList.toggle('is-picked', b === opt); });
-                    touched(grp);
+                    var gEx = +grp.getAttribute('data-ex');
+                    var gSt = exSt(gEx);
+                    if (isLocked(grp, gSt)) return;
+                    gSt.v[keyOf(grp)] = opt.getAttribute('data-opt');
+                    exSave();
+                    applyEx(gEx);
+                    refreshExShare();
                     return;
                 }
-                var t = e.target.closest ? e.target.closest('[data-ex-check],[data-ex-show],[data-ex-reset]') : null;
+                var t = e.target.closest ? e.target.closest('[data-ex-check],[data-ex-reset]') : null;
                 if (!t) return;
                 t.blur();
-                var exIdx;
+                var exIdx, st;
                 if (t.hasAttribute('data-ex-check')) {
                     exIdx = +t.getAttribute('data-ex-check');
-                    markCheck(exIdx);
                     exSt(exIdx).checked = true;
-                    exSave();
-                } else if (t.hasAttribute('data-ex-show')) {
-                    exIdx = +t.getAttribute('data-ex-show');
-                    exSt(exIdx).peeked = true;
-                    exSave();
-                    gapsOf(exIdx).forEach(function (g) {
-                        var a = exAccepted(answerOf(g));
-                        if (g.tagName === 'INPUT') {
-                            var old = g.nextSibling;
-                            if (old && old.className === 'hub-ex-key') old.parentNode.removeChild(old);
-                            var k = document.createElement('span');
-                            k.className = 'hub-ex-key';
-                            k.textContent = '(' + a[0] + ')';
-                            g.parentNode.insertBefore(k, g.nextSibling);
-                        } else {
-                            Array.prototype.forEach.call(g.querySelectorAll('.hub-ex-opt'), function (b) {
-                                var isKey = a.some(function (x) { return exNorm(x) === exNorm(b.getAttribute('data-opt')); });
-                                b.classList.toggle('is-key', isKey);
-                            });
-                        }
-                    });
                 } else {
                     exIdx = +t.getAttribute('data-ex-reset');
-                    var st = exSt(exIdx);
+                    st = exSt(exIdx);
+                    var any = st.checked || Object.keys(st.v).some(function (k) { return String(st.v[k] || '').trim(); });
+                    if (any) st.attempts = (st.attempts || 1) + 1;
                     st.v = {};
                     st.checked = false;
-                    exSave();
-                    gapsOf(exIdx).forEach(function (g) {
-                        clearMarks(g);
-                        if (g.tagName === 'INPUT') g.value = '';
-                        else Array.prototype.forEach.call(g.querySelectorAll('.hub-ex-opt'), function (b) { b.classList.remove('is-picked'); });
-                    });
-                    setScoreEmpty(exIdx);
                 }
+                exSave();
+                applyEx(exIdx);
                 refreshExShare();
             });
 
@@ -6036,11 +6026,15 @@ video {
             EXERCISES.forEach(function (ex, exIdx) {
                 var r = exResult(exIdx);
                 if (!r.filled) return;
-                var head = (ex.title || ('Ćwiczenie ' + (exIdx + 1))) + ': ' + r.ok + '/' + r.total;
-                if (exSt(exIdx).peeked) head += ' (podejrzane odpowiedzi)';
+                var st = exSt(exIdx);
+                var head = (ex.title || ('Ćwiczenie ' + (exIdx + 1))) + ': ' + r.ok + '/' + r.total + ' pkt, próba nr ' + st.attempts;
+                if (!st.checked && r.filled < r.total) head += ' (niedokończone: ' + r.filled + ' z ' + r.total + ')';
+                if (st.peeked) head += ' (podejrzane odpowiedzi)';
                 lines.push(head);
-                if (r.wrong.length) {
-                    lines.push('Błędy: ' + r.wrong.map(function (w) {
+                // Przed "Sprawdz" puste luki to nie bledy, tylko jeszcze nie zrobione.
+                var wrongList = st.checked ? r.wrong : r.wrong.filter(function (w) { return w.val; });
+                if (wrongList.length) {
+                    lines.push('Błędy: ' + wrongList.map(function (w) {
                         return '(' + w.num + ') ' + (w.val || '-');
                     }).join(', '));
                 }
@@ -6062,14 +6056,22 @@ video {
         function refreshExShare() {
             var panel = el('hub-ex-share-panel');
             var wa = el('hub-ex-share-wa');
+            var mail = el('hub-ex-share-mail');
             if (!panel || !wa) return;
             panel.classList.toggle('hidden', !EXERCISES.length);
             var n = exStartedCount();
             if (!n) {
                 wa.classList.add('is-disabled');
                 wa.setAttribute('href', '#');
+                if (mail) { mail.classList.add('is-disabled'); mail.setAttribute('href', '#'); }
                 setExStatus('Zrób przynajmniej jedno ćwiczenie, żeby było co wysłać.', false);
                 return;
+            }
+            if (mail) {
+                mail.classList.remove('is-disabled');
+                mail.setAttribute('href', 'mailto:?subject=' +
+                    encodeURIComponent((HUB.student || '') + ' - ćwiczenia ' + (HUB.monthLabel || '')) +
+                    '&body=' + encodeURIComponent(buildExShareText()));
             }
             var num = (HUB.teacherWhatsApp || '').replace(/[^0-9]/g, '');
             wa.classList.remove('is-disabled');
@@ -6089,10 +6091,10 @@ video {
                     if (!exStartedCount()) { setExStatus('Zrób przynajmniej jedno ćwiczenie, żeby było co wysłać.', true); return; }
                     try {
                         navigator.share({ text: buildExShareText() }).catch(function () {
-                            setExStatus('Udostępnianie anulowane - spróbuj WhatsApp albo Kopiuj wyniki.', false);
+                            setExStatus('Udostępnianie anulowane - spróbuj WhatsApp albo Kopiuj tekst.', false);
                         });
                     } catch (e) {
-                        setExStatus('Udostępnianie niedostępne - użyj WhatsApp albo Kopiuj wyniki.', false);
+                        setExStatus('Udostępnianie niedostępne - użyj WhatsApp albo Kopiuj tekst.', false);
                     }
                 });
             }
@@ -6138,11 +6140,139 @@ video {
             });
         }
 
-        // Pytania pod tekstem: klik w opcje od razu pokazuje dobrze/zle.
+        // Pytania pod tekstem (np. czytanka z testu). Pierwsze klikniecie blokuje
+        // pytanie: zla odpowiedz na czerwono, poprawna zawsze na zielono. Wybory
+        // i liczba prob zapisuja sie w przegladarce (WQ_KEY), "Resetuj" czysci
+        // wybory i otwiera kolejna probe. Pytania bez options = do dyskusji, bez punktow.
+        var WQ_KEY = STORAGE_KEY + '_teksty';
+        function wqLoad() {
+            try { var o = JSON.parse(safeGet(WQ_KEY) || '{}'); return (o && typeof o === 'object') ? o : {}; }
+            catch (e) { return {}; }
+        }
+        var wqState = wqLoad();
+        // Klucz po tytule i poczatku tekstu, nie po pozycji - nowy tekst dopisany
+        // pozniej w miesiacu nie przesunie zapisanych odpowiedzi.
+        function wqId(w) { return (w.title || '') + '|' + String(w.text || '').slice(0, 40); }
+        function wqSt(w) {
+            var k = wqId(w);
+            if (!wqState[k] || typeof wqState[k] !== 'object') wqState[k] = { picks: {}, attempts: 1 };
+            if (!wqState[k].picks) wqState[k].picks = {};
+            if (!wqState[k].attempts) wqState[k].attempts = 1;
+            return wqState[k];
+        }
+        function wqSave() { safeSet(WQ_KEY, JSON.stringify(wqState)); }
+        function wqGraded(w) {
+            return (w.questions || []).filter(function (q) { return q.options && q.options.length; });
+        }
+        function wqResult(w) {
+            var st = wqSt(w), ok = 0, answered = 0, wrong = [];
+            (w.questions || []).forEach(function (q, qi) {
+                if (!q.options || !q.options.length) return;
+                var p = st.picks[qi];
+                if (p === undefined) return;
+                answered++;
+                if (q.options[p] === q.answer) ok++;
+                else wrong.push({ num: qi + 1, picked: String.fromCharCode(65 + p), key: String.fromCharCode(65 + q.options.indexOf(q.answer)) });
+            });
+            return { ok: ok, answered: answered, total: wqGraded(w).length, wrong: wrong, attempts: st.attempts };
+        }
+        function wqShareText(w) {
+            var r = wqResult(w);
+            var lines = [
+                (HUB.student || 'Uczeń') + ' - ' + (HUB.monthLabel || '') + ', Teksty',
+                '',
+                (w.title || 'Tekst') + ': ' + r.ok + '/' + r.total + ' pkt',
+                'Próba nr ' + r.attempts
+            ];
+            if (r.answered < r.total) lines.push('Niedokończone: odpowiedzi na ' + r.answered + ' z ' + r.total + ' pytań');
+            if (r.wrong.length) {
+                lines.push('Błędy: ' + r.wrong.map(function (x) {
+                    return x.num + ' (zaznaczone ' + x.picked + ', poprawna ' + x.key + ')';
+                }).join(', '));
+            }
+            return lines.join('\n');
+        }
+        function wqApply(w, flatIdx) {
+            var box = el('hub-writing-list');
+            if (!box) return;
+            var st = wqSt(w);
+            (w.questions || []).forEach(function (q, qi) {
+                var btns = box.querySelectorAll('[data-wq="' + flatIdx + '"][data-wq-q="' + qi + '"]');
+                var p = st.picks[qi];
+                Array.prototype.forEach.call(btns, function (b, oi) {
+                    b.classList.remove('is-ok', 'is-bad');
+                    b.disabled = p !== undefined;
+                    b.style.cursor = p !== undefined ? 'default' : '';
+                    if (p === undefined) return;
+                    if (q.options[oi] === q.answer) b.classList.add('is-ok');
+                    else if (oi === p) b.classList.add('is-bad');
+                });
+            });
+            var r = wqResult(w);
+            var score = box.querySelector('[data-wq-score="' + flatIdx + '"]');
+            if (score) score.textContent = 'Wynik: ' + r.ok + '/' + r.total + ' pkt · próba nr ' + r.attempts +
+                (r.answered < r.total ? ' · odpowiedzi: ' + r.answered + ' z ' + r.total : '');
+            var text = wqShareText(w);
+            var encoded = encodeURIComponent(text);
+            var none = !r.answered;
+            var wa = box.querySelector('[data-wq-wa="' + flatIdx + '"]');
+            var mail = box.querySelector('[data-wq-mail="' + flatIdx + '"]');
+            var num = (HUB.teacherWhatsApp || '').replace(/[^0-9]/g, '');
+            if (wa) {
+                wa.classList.toggle('is-disabled', none);
+                wa.setAttribute('href', none ? '#' : 'https://wa.me/' + num + '?text=' + encoded);
+            }
+            if (mail) {
+                mail.classList.toggle('is-disabled', none);
+                mail.setAttribute('href', none ? '#' : 'mailto:?subject=' +
+                    encodeURIComponent((HUB.student || '') + ' - ' + (w.title || 'Teksty')) + '&body=' + encoded);
+            }
+            wqStatus(flatIdx, none ? 'Odpowiedz na przynajmniej jedno pytanie, żeby było co wysłać.' : '', false);
+        }
+        function wqStatus(flatIdx, msg, warn) {
+            var s = document.querySelector('[data-wq-status="' + flatIdx + '"]');
+            if (!s) return;
+            s.textContent = msg || '';
+            s.classList.toggle('is-warn', !!warn);
+        }
+        function wqCopy(flatIdx, text) {
+            var fb = document.querySelector('[data-wq-fallback="' + flatIdx + '"]');
+            function done() {
+                if (fb) fb.classList.add('hidden');
+                wqStatus(flatIdx, 'Skopiowane. Wklej na WhatsAppie albo gdzie chcesz.', false);
+            }
+            function manual() {
+                if (!fb) return;
+                fb.classList.remove('hidden');
+                fb.value = text;
+                fb.focus();
+                fb.select();
+                wqStatus(flatIdx, 'Zaznacz tekst poniżej i skopiuj ręcznie.', true);
+            }
+            function legacy() {
+                var ok = false;
+                try {
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.setAttribute('readonly', '');
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                } catch (e) { ok = false; }
+                if (ok) done(); else manual();
+            }
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(text).then(done).catch(legacy);
+            } else legacy();
+        }
         function writingQuestionsHtml(w, flatIdx) {
             var qs = w.questions || [];
             if (!qs.length) return '';
-            return '<div class="hub-wq">' + qs.map(function (q, qi) {
+            var graded = wqGraded(w).length > 0;
+            var html = '<div class="hub-wq">' + qs.map(function (q, qi) {
                 var opts = (q.options || []).map(function (opt, oi) {
                     return '<button type="button" class="hub-ex-opt" data-wq="' + flatIdx + '" data-wq-q="' + qi + '" data-wq-opt="' + oi + '">' +
                         escapeHtml(String.fromCharCode(65 + oi) + '. ' + opt) + '</button>';
@@ -6152,6 +6282,23 @@ video {
                     (opts ? '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">' + opts + '</div>' : '') +
                     '</div>';
             }).join('') + '</div>';
+            if (!graded) return html;
+            return html +
+                '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 0">' +
+                '<span class="hub-ex-score" style="white-space:normal" data-wq-score="' + flatIdx + '"></span>' +
+                '<button type="button" class="hub-ex-btn" data-wq-reset="' + flatIdx + '">&#8635; Resetuj</button>' +
+                '</div>' +
+                '<div class="hub-share">' +
+                '<div class="hub-share-actions">' +
+                (typeof navigator.share === 'function'
+                    ? '<button type="button" class="hub-cta hub-cta-alt" data-wq-native="' + flatIdx + '">&#128228; Udost&#281;pnij</button>' : '') +
+                '<a class="hub-cta hub-cta-wa" data-wq-wa="' + flatIdx + '" href="#" target="_blank" rel="noopener">&#128172; Wy&#347;lij na WhatsApp</a>' +
+                '<button type="button" class="hub-cta hub-cta-alt" data-wq-copy="' + flatIdx + '">&#128203; Kopiuj tekst</button>' +
+                '<a class="hub-cta hub-cta-alt" data-wq-mail="' + flatIdx + '" href="#">&#9993;&#65039; Wy&#347;lij mailem</a>' +
+                '</div>' +
+                '<p class="hub-share-status" data-wq-status="' + flatIdx + '"></p>' +
+                '<textarea class="hub-share-fallback hidden" data-wq-fallback="' + flatIdx + '" readonly></textarea>' +
+                '</div>';
         }
 
         function renderWriting() {
@@ -6186,20 +6333,44 @@ video {
                 }).join('');
                 return '<details class="hub-lesson-group"' + (isLast ? ' open' : '') + '>' + head + body + '</details>';
             }).join('');
+            WRITING.forEach(function (w, wi) { if (wqGraded(w).length) wqApply(w, wi); });
 
             box.addEventListener('click', function (e) {
                 var wqBtn = e.target.closest ? e.target.closest('[data-wq]') : null;
                 if (wqBtn) {
-                    var wItem = WRITING[parseInt(wqBtn.getAttribute('data-wq'), 10)];
-                    var wq = wItem && wItem.questions[parseInt(wqBtn.getAttribute('data-wq-q'), 10)];
-                    if (!wq) return;
-                    var picked = wq.options[parseInt(wqBtn.getAttribute('data-wq-opt'), 10)];
-                    var siblings = wqBtn.parentNode.querySelectorAll('[data-wq]');
-                    for (var si = 0; si < siblings.length; si++) siblings[si].classList.remove('is-ok', 'is-bad', 'is-key');
-                    if (picked === wq.answer) {
-                        wqBtn.classList.add('is-ok');
-                    } else {
-                        wqBtn.classList.add('is-bad');
+                    var wIdx = parseInt(wqBtn.getAttribute('data-wq'), 10);
+                    var wItem = WRITING[wIdx];
+                    var wqi = parseInt(wqBtn.getAttribute('data-wq-q'), 10);
+                    if (!wItem || !wItem.questions[wqi]) return;
+                    var wst = wqSt(wItem);
+                    if (wst.picks[wqi] !== undefined) return;   // pytanie juz zablokowane
+                    wst.picks[wqi] = parseInt(wqBtn.getAttribute('data-wq-opt'), 10);
+                    wqSave();
+                    wqApply(wItem, wIdx);
+                    return;
+                }
+                var wqAct = e.target.closest ? e.target.closest('[data-wq-reset],[data-wq-copy],[data-wq-native]') : null;
+                if (wqAct) {
+                    wqAct.blur();
+                    var aIdx = parseInt(wqAct.getAttribute('data-wq-reset') || wqAct.getAttribute('data-wq-copy') || wqAct.getAttribute('data-wq-native'), 10);
+                    var aItem = WRITING[aIdx];
+                    if (!aItem) return;
+                    if (wqAct.hasAttribute('data-wq-reset')) {
+                        var rst = wqSt(aItem);
+                        if (Object.keys(rst.picks).length) rst.attempts++;
+                        rst.picks = {};
+                        wqSave();
+                        wqApply(aItem, aIdx);
+                        return;
+                    }
+                    if (!wqResult(aItem).answered) { wqStatus(aIdx, 'Odpowiedz na przynajmniej jedno pytanie, żeby było co wysłać.', true); return; }
+                    if (wqAct.hasAttribute('data-wq-copy')) { wqCopy(aIdx, wqShareText(aItem)); return; }
+                    try {
+                        navigator.share({ text: wqShareText(aItem) }).catch(function () {
+                            wqStatus(aIdx, 'Udostępnianie anulowane - spróbuj WhatsApp albo Kopiuj tekst.', false);
+                        });
+                    } catch (err) {
+                        wqStatus(aIdx, 'Udostępnianie niedostępne - użyj WhatsApp albo Kopiuj tekst.', false);
                     }
                     return;
                 }
