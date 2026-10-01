@@ -314,6 +314,7 @@
 /* FONTS_END */
     </style>
     
+    
     <style>
 /* TW_BUILD_START - generowane przez _tools/build_engine_css.mjs, nie edytuj recznie */
 *, ::before, ::after {
@@ -2550,23 +2551,42 @@ video {
         <!-- === HUB MODULE - END (writing/speaking view) === -->
         <!-- === HUB MODULE - START (exercises view) === -->
         <style>
-            .hub-ex-item { margin: 0 0 12px; line-height: 2.1; }
-            .hub-ex-text { margin: 0 0 12px; line-height: 2.3; font-size: 15.5px; }
-            .hub-ex-num { font-weight: 700; margin-right: 6px; }
+            /* Karty cwiczen - wzor: osobne pliki z testami (future-forms.html) */
+            .hub-ex-card { background: #fff; border: 1px solid var(--hub-line); border-radius: 16px; padding: 18px 20px 16px;
+                margin: 0 0 18px; box-shadow: 0 6px 20px rgba(22,24,29,.05); }
+            .hub-ex-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; list-style: none; }
+            .hub-ex-head::-webkit-details-marker { display: none; }
+            .hub-ex-title { font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 17px; font-weight: 800; color: var(--hub-ink); }
+            .hub-ex-title::before { content: '\25B8'; display: inline-block; margin-right: 8px; color: var(--hub-muted); transition: transform .15s; }
+            .hub-ex-card[open] .hub-ex-title::before { transform: rotate(90deg); }
+            .hub-ex-score { font-size: 13px; font-weight: 700; color: #1e5aae; background: #e9f0fa; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+            .hub-ex-instr { color: var(--hub-muted); font-size: 14px; line-height: 1.5; margin: 10px 0 12px; }
+            .hub-ex-item { padding: 11px 0; border-top: 1px solid var(--hub-line); line-height: 1.9; font-size: 15.5px; }
+            .hub-ex-item:first-of-type { border-top: none; }
+            /* pre-line: "\n" w tekscie pozycji lamie linie (np. punkty polecenia w wypracowaniu) */
+            .hub-ex-text { margin: 0 0 12px; line-height: 2.3; font-size: 15.5px; white-space: pre-line; }
+            .hub-ex-num { font-weight: 700; color: var(--hub-muted); margin-right: 6px; }
             .hub-ex-gapnum { font-weight: 700; margin: 0 3px 0 2px; }
-            .hub-ex-input { border: none; border-bottom: 2px solid #94a3b8; background: transparent; font: inherit; text-align: center; padding: 0 4px; outline: none; max-width: 100%; }
-            .hub-ex-input:focus { border-bottom-color: #2563eb; }
-            .hub-ex-input.is-ok { border-bottom-color: #16a34a; color: #15803d; }
-            .hub-ex-input.is-bad { border-bottom-color: #dc2626; color: #b91c1c; }
-            .hub-ex-key { color: #15803d; font-size: 0.85em; margin-left: 4px; }
-            .hub-ex-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
-            .hub-ex-score { font-weight: 700; }
+            .hub-ex-hint { color: var(--hub-muted); font-size: 0.9em; }
+            .hub-ex-input { border: 1.5px solid #d6d9df; border-radius: 8px; background: #fff; color: var(--hub-ink); font: inherit;
+                padding: 2px 8px; margin: 0 3px; outline: none; max-width: 100%; box-sizing: border-box; }
+            .hub-ex-item .hub-ex-input { max-width: 12em; }
+            .hub-ex-input:focus { border-color: #1e5aae; }
+            .hub-ex-input.is-ok { border-color: #1f9254; background: #eafaf0; color: #15803d; }
+            .hub-ex-input.is-bad { border-color: #ee4352; background: #fdecec; color: #b91c1c; }
+            .hub-ex-key { color: #15803d; font-size: 0.85em; font-weight: 600; margin-left: 4px; }
+            .hub-ex-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin-top: 12px; }
+            .hub-ex-btn { font: inherit; font-size: 14px; font-weight: 600; border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer;
+                background: #e9f0fa; color: #1e5aae; }
+            .hub-ex-btn:hover { background: #dcebfa; }
+            .hub-ex-btn-main { background: #1e5aae; color: #fff; }
+            .hub-ex-btn-main:hover { background: #1e5aae; opacity: .9; }
             .hub-ex-box { display: flex; flex-wrap: wrap; gap: 6px 14px; border: 1px solid var(--hub-line); border-radius: 10px;
                           padding: 10px 14px; margin: 0 0 14px; font-weight: 600; }
+            .hub-ex-box span { white-space: nowrap; padding: 3px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; }
             .hub-ex-choice { display: inline-flex; flex-wrap: wrap; gap: 4px; vertical-align: middle; }
-            .hub-ex-opt { font: inherit; font-size: 14.5px; line-height: 1.35; padding: 2px 9px; border-radius: 8px; cursor: pointer;
-                          border: 1.5px solid #cbd5e1; background: #fff; color: var(--hub-ink); }
-            .hub-ex-opt:hover { border-color: #2563eb; }
+            .hub-ex-opt { font: inherit; font-size: 14.5px; line-height: 1.35; padding: 5px 12px; margin: 2px 0; border-radius: 8px; cursor: pointer; border: 1.5px solid #d6d9df; background: #fff; color: var(--hub-ink); }
+            .hub-ex-opt:hover { border-color: #1e5aae; }
             .hub-ex-opt.is-picked { border-color: #2563eb; background: #eff6ff; font-weight: 700; }
             .hub-ex-opt.is-ok { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
             .hub-ex-opt.is-bad { border-color: #dc2626; background: #fef2f2; color: #b91c1c; text-decoration: line-through; }
@@ -2579,9 +2599,10 @@ video {
             .hub-ex-table .hub-ex-input { width: 100%; min-width: 90px; text-align: left; }
             .hub-ex-img { width: 1%; }
             .hub-ex-img svg { display: block; height: 40px; width: auto; max-width: 64px; box-shadow: 0 0 0 1px #cbd5e1; }
-            .hub-ex-self { margin: 0 0 16px; }
+            .hub-ex-self { padding: 12px 0; border-top: 1px solid var(--hub-line); }
+            .hub-ex-self:first-of-type { border-top: none; }
             .hub-ex-self-q { margin: 0 0 6px; line-height: 1.5; }
-            .hub-ex-selfinput { width: 100%; box-sizing: border-box; font: inherit; padding: 6px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; outline: none; background: #fff; color: var(--hub-ink); }
+            .hub-ex-selfinput { width: 100%; box-sizing: border-box; font: inherit; padding: 6px 10px; border: 1.5px solid #d6d9df; border-radius: 8px; outline: none; background: #fff; color: var(--hub-ink); }
             .hub-ex-selfinput:focus { border-color: #2563eb; }
             .hub-ex-model { margin-top: 6px; }
             .hub-ex-model summary { cursor: pointer; font-size: 14px; font-weight: 600; color: #2563eb; }
@@ -2995,6 +3016,7 @@ video {
                         "dateLabel": "9.09.2026",
                         "categoryKey": "Lekcja 1 (9.09)",
                         "vocabCount": 20,
+                        "extraVocabCount": 0,
                         "topic": "Rozmowa ogólna: kupno nowego samochodu, wystąpienia publiczne, obecność online, mówienie po angielsku, targi branżowe"
                 },
                 {
@@ -3002,6 +3024,7 @@ video {
                         "dateLabel": "21.09.2026",
                         "categoryKey": "Lekcja 2 (21.09)",
                         "vocabCount": 8,
+                        "extraVocabCount": 0,
                         "topic": "Rozmowa ogólna: kolory, polityka międzynarodowa i krajowa (Trump, Brown), mieszkanie/dom, samochody"
                 }
         ],
@@ -3180,7 +3203,8 @@ video {
                         "lessonLabel": "Lekcja 2",
                         "dateLabel": "21.09.2026",
                         "title": "Podsumowanie spotkania (Nancy, Wispr Flow)",
-                        "text": "Casual English lesson catch-up between Shimon and Grzegorz, covering family time, car shopping, illness, politics, and debt/investment philosophy. Ended with a walkthrough of the new lesson notes platform and rescheduling.\n\nCatch-up: Family and Travel\n- Shimon spent time with his brother Jarek in Lipno doing maintenance and installation work, and enjoyed downtime watching sports.\n- Plans to spend around a month each year in Lipno with Jarek, using two separate houses so they can share time but keep independence.\n- Jarek turns 60 next year and may shift to working only once or twice a year, freeing up summers in Colombia or Lipno.\n- Brother moved from Panama to Bogota after his wife felt unsafe alone on their remote property while he worked in Saudi.\n\nCar Shopping\n- Shimon needs to pick a new car but finds it overwhelming; considering timing purchase for end/start of year for discounts.\n- Undecided between combi and SUV: SUV higher clearance helps for Lipno roads but uses more fuel.\n- Color does not matter much to him, though manufacturers charge extra (around 3,000) for non-default colors.\n\nIllness and COVID\n- Grzegorz had a short but heavy illness: chills and no energy, had to cancel lessons, recovered in 2-3 days.\n- Discussed how post-COVID illnesses feel more varied and unpredictable than the old flu pattern.\n\nPolitics and Current Events\n- Discussed Trump banning major media from the White House and insulting reporters, and his unreliable announcements (e.g. Iran war 'ended').\n- Noted reported US-Denmark agreement on Greenland, though a permanent US base there already exists.\n- Discussed Grzegorz Braun cutting a signpost in Krakow; turned out to be a staged prank sign attached with cable ties, not the real one.\n- Shimon believes Braun and similar far-right figures will eventually face consequences despite immunity delays.\n\nDebt, Loans and Investing\n- Grzegorz avoids loans due to childhood experience of family debt struggles; had to move to Ireland for work.\n- Shimon uses bank credit at ~10% to import machines from Turkey sold at ~30% margin, turning capital several times a year.\n- Referenced Robert Kiyosaki's Rich Dad, Poor Dad model of using debt for investments where returns exceed interest.\n- Owning a flat framed as better than renting: mortgage ~2,000/month vs ~4,000 rent in Poznan, with ownership after 15 years.\n\nNext Steps\n- (Shimon) Review the lesson notes page more carefully, including vocabulary, grammar, and practice sections.\n- (Shimon) Write example sentences using lesson vocabulary and send them to Grzegorz via WhatsApp for checking.\n- (Grzegorz) Continue preparing lesson notes and materials on the platform for each lesson.\n\nDecisions Made\n- Next lesson postponed by two weeks because Shimon is travelling to spend another week with his brother."
+                        "text": "Casual English lesson catch-up between Shimon and Grzegorz, covering family time, car shopping, illness, politics, and debt/investment philosophy. Ended with a walkthrough of the new lesson notes platform and rescheduling.\n\nCatch-up: Family and Travel\n- Shimon spent time with his brother Jarek in Lipno doing maintenance and installation work, and enjoyed downtime watching sports.\n- Plans to spend around a month each year in Lipno with Jarek, using two separate houses so they can share time but keep independence.\n- Jarek turns 60 next year and may shift to working only once or twice a year, freeing up summers in Colombia or Lipno.\n- Brother moved from Panama to Bogota after his wife felt unsafe alone on their remote property while he worked in Saudi.\n\nCar Shopping\n- Shimon needs to pick a new car but finds it overwhelming; considering timing purchase for end/start of year for discounts.\n- Undecided between combi and SUV: SUV higher clearance helps for Lipno roads but uses more fuel.\n- Color does not matter much to him, though manufacturers charge extra (around 3,000) for non-default colors.\n\nIllness and COVID\n- Grzegorz had a short but heavy illness: chills and no energy, had to cancel lessons, recovered in 2-3 days.\n- Discussed how post-COVID illnesses feel more varied and unpredictable than the old flu pattern.\n\nPolitics and Current Events\n- Discussed Trump banning major media from the White House and insulting reporters, and his unreliable announcements (e.g. Iran war 'ended').\n- Noted reported US-Denmark agreement on Greenland, though a permanent US base there already exists.\n- Discussed Grzegorz Braun cutting a signpost in Krakow; turned out to be a staged prank sign attached with cable ties, not the real one.\n- Shimon believes Braun and similar far-right figures will eventually face consequences despite immunity delays.\n\nDebt, Loans and Investing\n- Grzegorz avoids loans due to childhood experience of family debt struggles; had to move to Ireland for work.\n- Shimon uses bank credit at ~10% to import machines from Turkey sold at ~30% margin, turning capital several times a year.\n- Referenced Robert Kiyosaki's Rich Dad, Poor Dad model of using debt for investments where returns exceed interest.\n- Owning a flat framed as better than renting: mortgage ~2,000/month vs ~4,000 rent in Poznan, with ownership after 15 years.\n\nNext Steps\n- (Shimon) Review the lesson notes page more carefully, including vocabulary, grammar, and practice sections.\n- (Shimon) Write example sentences using lesson vocabulary and send them to Grzegorz via WhatsApp for checking.\n- (Grzegorz) Continue preparing lesson notes and materials on the platform for each lesson.\n\nDecisions Made\n- Next lesson postponed by two weeks because Shimon is travelling to spend another week with his brother.",
+                        "questions": []
                 }
         ],
         "exercises": [],
@@ -3849,12 +3873,35 @@ video {
             const orderedSelectedTasks = taskTypes.filter(t => selectedTaskTypes.includes(t.id));
 
             // Intelligent Rotation Helper
-            function pullWordForTask(taskTypeId) {
+            // rejectFn (optional): words it returns true for are skipped while anything else is
+            // available - used by matching rounds to keep look-alike items out of the same round.
+            function pullWordForTask(taskTypeId, rejectFn) {
                 // gap_hint and abcd_gap both render sentenceWithGap - words missing it must be skipped for these tasks
                 const needsGap = (taskTypeId === 'gap_hint' || taskTypeId === 'abcd_gap');
 
                 if (activePoolToDrawFrom.length === 0) {
                     activePoolToDrawFrom = getRotationPool(authorizedPool, 1);
+                }
+
+                if (rejectFn) {
+                    let idx = activePoolToDrawFrom.findIndex(w => !rejectFn(w) && !(globalWordTaskHistory[w.word] || []).includes(taskTypeId));
+                    if (idx === -1) idx = activePoolToDrawFrom.findIndex(w => !rejectFn(w));
+                    let picked = null;
+                    if (idx !== -1) {
+                        picked = activePoolToDrawFrom.splice(idx, 1)[0];
+                    } else {
+                        // Rotation slice holds only look-alikes - reach into the full selected pool instead
+                        const safe = authorizedPool.filter(w => !rejectFn(w));
+                        if (safe.length > 0) picked = safe[Math.floor(Math.random() * safe.length)];
+                    }
+                    if (picked) {
+                        if (!globalWordTaskHistory[picked.word]) globalWordTaskHistory[picked.word] = [];
+                        globalWordTaskHistory[picked.word].push(taskTypeId);
+                        wordsSelectedThisSession.push(picked.word);
+                        return picked;
+                    }
+                    // Tiny vocabulary with nothing but look-alikes: fall through to the normal pick;
+                    // checkMatchingAnswers still accepts visually identical pairs.
                 }
                 if (needsGap && !activePoolToDrawFrom.some(w => !!w.sentenceWithGap)) {
                     // Current rotation slice has no gap-eligible words left - refill from the full authorized pool
@@ -3905,13 +3952,20 @@ video {
                 for (let i = 0; i < needed; i++) {
                     
                     if (taskDef.id.startsWith('match')) {
-                        let pairItems = [
-                            pullWordForTask(taskDef.id), pullWordForTask(taskDef.id), 
-                            pullWordForTask(taskDef.id), pullWordForTask(taskDef.id)
-                        ];
-                        
                         const rightField = taskDef.id === 'match_def' ? 'definition' : 'translation';
-                        
+
+                        // No two items in one round may look alike on screen: same word, same
+                        // translation/definition, or a marked near-synonym (excludeDistractors).
+                        // Otherwise a student can't tell two buttons apart and gets red for a
+                        // visually correct pair (e.g. "It's freezing." / "It's frosty." = "Jest mroźno.").
+                        const sameText = (a, b) => (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
+                        let pairItems = [];
+                        for (let k = 0; k < 4; k++) {
+                            pairItems.push(pullWordForTask(taskDef.id, w => pairItems.some(p =>
+                                sameText(p.word, w.word) || sameText(p[rightField], w[rightField]) ||
+                                (p.excludeDistractors || []).includes(w.word) || (w.excludeDistractors || []).includes(p.word))));
+                        }
+
                         // FREEZE ITEM
                         let frozenQuestion = { assignedTaskType: taskDef.id, globalIndex: globalQCounter++, isCompleted: false, earnedXP: 0 };
                         // Pair identity uses a stable numeric id (pairItems' own index), not the
@@ -4357,6 +4411,23 @@ video {
             }
         }
 
+        // Safety net for rounds where look-alikes could not be kept apart (tiny vocabulary):
+        // a pair is correct when it is correct by id, or when the buttons the student joined
+        // show the same text as a correct pair. Returns the pair as the answer key spells it
+        // (so completedConnections still match correctMatchKey for server-side grading), or null.
+        function canonicalMatchConnection(task, leftId, rightId) {
+            const sameText = (a, b) => (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
+            const leftOf = id => task.frozenLeft.find(l => String(l.id) === String(id));
+            const rightOf = id => task.frozenRight.find(r => String(r.id) === String(id));
+            const ownRight = rightOf(leftId), chosenRight = rightOf(rightId);
+            // ids come back as the numbers the answer key uses (button dataset ids are strings)
+            if (String(leftId) === String(rightId) && ownRight) return { leftId: ownRight.id, rightId: ownRight.id };
+            if (ownRight && chosenRight && sameText(ownRight.value, chosenRight.value)) return { leftId: ownRight.id, rightId: ownRight.id };
+            const chosenLeft = leftOf(leftId), ownLeft = leftOf(rightId);
+            if (chosenLeft && ownLeft && sameText(chosenLeft.word, ownLeft.word)) return { leftId: ownLeft.id, rightId: ownLeft.id };
+            return null;
+        }
+
         function checkMatchingAnswers(actionBtn, feedbackContainer, navContainer, task) {
             let mState = task.matchStateMemory;
             let allCorrectThisRound = true;
@@ -4366,13 +4437,14 @@ video {
 
                 const lBtn = findLeftBtn(conn.leftId);
                 const rBtn = findRightBtn(conn.rightId);
+                const canonical = canonicalMatchConnection(task, conn.leftId, conn.rightId);
 
-                if (String(conn.leftId) === String(conn.rightId)) {
+                if (canonical) {
                     conn.status = 'correct';
                     lBtn.className = "matching-btn relative w-full p-4 rounded-xl border-2 border-green-500 bg-green-50 text-green-900 font-display font-bold text-center z-30 opacity-90 cursor-not-allowed text-base";
                     rBtn.className = "matching-btn relative w-full min-h-[64px] p-4 rounded-xl border-2 border-green-500 bg-green-50 text-green-900 font-semibold flex items-center justify-center text-sm md:text-base z-30 opacity-90 cursor-not-allowed text-center";
                     lBtn.disabled = true; rBtn.disabled = true;
-                    task.completedConnections.push({ leftId: conn.leftId, rightId: conn.rightId });
+                    task.completedConnections.push(canonical);
                 } else {
                     conn.status = 'error'; allCorrectThisRound = false; 
                     lBtn.className = "matching-btn relative w-full p-4 rounded-xl border-2 border-red-500 bg-red-50 text-red-900 font-display font-bold text-center z-30 animate-shake text-base"; 
@@ -5151,7 +5223,8 @@ video {
                     '<span class="hub-lesson-head">' +
                         '<strong>' + escapeHtml(l.label || '') + '</strong>' +
                         '<span class="hub-lesson-meta">' + escapeHtml(l.dateLabel || '') +
-                        ' &middot; ' + escapeHtml(count(l.vocabCount || 0, 'słówko', 'słówka', 'słówek')) + '</span>' +
+                        ' &middot; ' + escapeHtml(count(l.vocabCount || 0, 'słówko', 'słówka', 'słówek')) +
+                        (l.extraVocabCount ? ' + ' + escapeHtml(String(l.extraVocabCount)) + ' extra' : '') + '</span>' +
                     '</span>' +
                     (l.topic ? '<span class="hub-lesson-topic">' + escapeHtml(l.topic) + '</span>' : '') +
                     '</div>';
@@ -5535,6 +5608,9 @@ video {
         function playWritingSentence() {
             var wp = writingPlayback;
             if (!wp) return;
+            // Timer przerwy miedzy zdaniami juz sie wykonal - bez wyzerowania
+            // pauza bralaby go za trwajaca cisze i nie przerywala lektora.
+            wp.timer = null;
             var mySession = wp.sessionId;
             if (wp.idx >= wp.sentences.length) { stopWritingPlayback(); return; }
             updateWritingSeekBar(wp.itemIdx, (wp.charOffsets[wp.idx] || 0) / wp.totalChars);
@@ -5590,7 +5666,13 @@ video {
                 writingPlayback.timer = null;
                 writingPlayback.pendingNext = true;
             } else {
-                try { window.speechSynthesis.pause(); } catch (e) { /* ignore */ }
+                // speechSynthesis.pause() bywa ignorowane w Chrome (glosy Google),
+                // wiec przerywamy i po wznowieniu czytamy biezace zdanie od poczatku.
+                // Nowy sessionId sprawia, ze onend przerwanej wypowiedzi nic nie robi.
+                writingSessionCounter++;
+                writingPlayback.sessionId = writingSessionCounter;
+                writingPlayback.pendingNext = true;
+                try { window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
             }
             updateWritingButtons();
         }
@@ -5747,7 +5829,11 @@ video {
                 function itemHtml(it, itIdx) {
                     var parts = it.text.split('[gap]');
                     return parts.map(function (p, i) {
-                        return escapeHtml(p) + (i < parts.length - 1 ? gapHtml(it, itIdx, i) : '');
+                        // Nawias zaraz po luce to podpowiedz ("(rain)", "(✗ will rain)") -
+                        // wyszarzona, zeby nie mieszala sie z trescia zdania.
+                        var txt = escapeHtml(p);
+                        if (i > 0) txt = txt.replace(/^(\s*)(\([^)]*\))/, '$1<span class="hub-ex-hint">$2</span>');
+                        return txt + (i < parts.length - 1 ? gapHtml(it, itIdx, i) : '');
                     }).join('');
                 }
                 var body;
@@ -5790,16 +5876,18 @@ video {
                     ? '<div class="hub-ex-box">' + ex.wordBox.map(function (w) { return '<span>' + escapeHtml(w) + '</span>'; }).join('') + '</div>'
                     : '';
                 // Rozwiniete tylko pierwsze cwiczenie - cala lista naraz przytlacza.
-                return '<details class="hub-lesson-group"' + (exIdx === 0 ? ' open' : '') + '>' +
-                    '<summary class="hub-section-title' + (exIdx === 0 ? ' is-first' : '') + '">' + escapeHtml(ex.title || '') + '</summary>' +
-                    (ex.instructions ? '<p class="hub-msg-body" style="margin-bottom:12px">' + escapeHtml(ex.instructions) + '</p>' : '') +
+                var gapTotal = ex.items.reduce(function (s, it) { return s + (it.answers || []).length; }, 0);
+                return '<details class="hub-lesson-group hub-ex-card"' + (exIdx === 0 ? ' open' : '') + '>' +
+                    '<summary class="hub-ex-head"><span class="hub-ex-title">' + escapeHtml(ex.title || '') + '</span>' +
+                    (isSelf ? '' : '<span class="hub-ex-score" data-ex-score="' + exIdx + '" data-ex-total="' + gapTotal + '">&ndash; / ' + gapTotal + '</span>') +
+                    '</summary>' +
+                    (ex.instructions ? '<p class="hub-ex-instr">' + escapeHtml(ex.instructions) + '</p>' : '') +
                     wordBox + body +
                     (isSelf ? '' :
                     '<div class="hub-ex-actions">' +
-                    '<button type="button" class="hub-link-btn" data-ex-check="' + exIdx + '">Sprawd&#378;</button>' +
-                    '<button type="button" class="hub-link-btn" data-ex-show="' + exIdx + '">Poka&#380; odpowiedzi</button>' +
-                    '<button type="button" class="hub-link-btn" data-ex-reset="' + exIdx + '">Wyczy&#347;&#263;</button>' +
-                    '<span class="hub-ex-score" data-ex-score="' + exIdx + '"></span>' +
+                    '<button type="button" class="hub-ex-btn hub-ex-btn-main" data-ex-check="' + exIdx + '">Sprawd&#378;</button>' +
+                    '<button type="button" class="hub-ex-btn" data-ex-show="' + exIdx + '">Poka&#380; odpowiedzi</button>' +
+                    '<button type="button" class="hub-ex-btn" data-ex-reset="' + exIdx + '">Wyczy&#347;&#263;</button>' +
                     '</div>') + '</details>';
             }).join('');
 
@@ -5846,7 +5934,7 @@ video {
                 });
                 box.querySelector('[data-ex-score="' + exIdx + '"]').textContent = ok + ' / ' + gs.length;
             }
-            function setScoreEmpty(exIdx) { box.querySelector('[data-ex-score="' + exIdx + '"]').textContent = ''; }
+            function setScoreEmpty(exIdx) { var s = box.querySelector('[data-ex-score="' + exIdx + '"]'); s.textContent = '– / ' + s.getAttribute('data-ex-total'); }
 
             // Przywrocenie zapisanych odpowiedzi.
             EXERCISES.forEach(function (ex, exIdx) {
@@ -6050,6 +6138,22 @@ video {
             });
         }
 
+        // Pytania pod tekstem: klik w opcje od razu pokazuje dobrze/zle.
+        function writingQuestionsHtml(w, flatIdx) {
+            var qs = w.questions || [];
+            if (!qs.length) return '';
+            return '<div class="hub-wq">' + qs.map(function (q, qi) {
+                var opts = (q.options || []).map(function (opt, oi) {
+                    return '<button type="button" class="hub-ex-opt" data-wq="' + flatIdx + '" data-wq-q="' + qi + '" data-wq-opt="' + oi + '">' +
+                        escapeHtml(String.fromCharCode(65 + oi) + '. ' + opt) + '</button>';
+                }).join('');
+                return '<div class="hub-wq-item" style="margin:14px 0 0">' +
+                    '<p style="margin:0 0 6px;font-weight:700">' + (qi + 1) + '. ' + escapeHtml(q.q) + '</p>' +
+                    (opts ? '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">' + opts + '</div>' : '') +
+                    '</div>';
+            }).join('') + '</div>';
+        }
+
         function renderWriting() {
             var box = el('hub-writing-list');
             if (!box) return;
@@ -6077,12 +6181,28 @@ video {
                         (w.title ? '<p class="hub-pron-word">' + escapeHtml(w.title) + '</p>' : '') +
                         player +
                         '<p class="hub-msg-body">' + escapeAndLinkify(w.text || '') + '</p>' +
+                        writingQuestionsHtml(w, flatIdx) +
                         '</div></div>';
                 }).join('');
                 return '<details class="hub-lesson-group"' + (isLast ? ' open' : '') + '>' + head + body + '</details>';
             }).join('');
 
             box.addEventListener('click', function (e) {
+                var wqBtn = e.target.closest ? e.target.closest('[data-wq]') : null;
+                if (wqBtn) {
+                    var wItem = WRITING[parseInt(wqBtn.getAttribute('data-wq'), 10)];
+                    var wq = wItem && wItem.questions[parseInt(wqBtn.getAttribute('data-wq-q'), 10)];
+                    if (!wq) return;
+                    var picked = wq.options[parseInt(wqBtn.getAttribute('data-wq-opt'), 10)];
+                    var siblings = wqBtn.parentNode.querySelectorAll('[data-wq]');
+                    for (var si = 0; si < siblings.length; si++) siblings[si].classList.remove('is-ok', 'is-bad', 'is-key');
+                    if (picked === wq.answer) {
+                        wqBtn.classList.add('is-ok');
+                    } else {
+                        wqBtn.classList.add('is-bad');
+                    }
+                    return;
+                }
                 var playPauseBtn = e.target.closest ? e.target.closest('[data-hub-writing-playpause]') : null;
                 var stopBtn = e.target.closest ? e.target.closest('[data-hub-writing-stop]') : null;
                 var rateBtn = e.target.closest ? e.target.closest('[data-hub-writing-rate]') : null;
